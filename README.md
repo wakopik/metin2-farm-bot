@@ -92,8 +92,8 @@ Ayrıntılı tasarım notları / Detailed design notes (TR): **[docs/MIMARI.md](
 
 ```powershell
 git lfs install
-git clone https://github.com/wakopik/elbit-metin2-farm-bot.git
-cd elbit-metin2-farm-bot
+git clone https://github.com/wakopik/metin2-farm-bot.git
+cd metin2-farm-bot
 
 # "x64 Native Tools Command Prompt for VS" içinde:
 set VCPKG_ROOT=C:\Program Files\Microsoft Visual Studio\18\Community\VC\vcpkg
@@ -122,7 +122,7 @@ kopyalanır.
 ## Klasör yapısı / Project layout
 
 ```
-elbit-metin2-farm-bot/
+metin2-farm-bot/
   CMakeLists.txt, CMakePresets.json, vcpkg.json
   config.json            tüm ayarlar (yorumlar src/config.h içinde)
   src/                   C++ kaynakları
