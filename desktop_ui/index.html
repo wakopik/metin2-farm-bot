@@ -23,7 +23,7 @@
 
 <!-- ================= OTURUM KONTROL (Beni Hatırla) EKRANI =================
      "Beni hatırla" ile kaydedilmis bir anahtar varsa, sayfa acilir acilmaz
-     KeyAuth'a karsi SESSIZCE yeniden dogrulaniyordu (bkz. app.js initAuth) -
+     lisans sunucusuna karsi SESSIZCE yeniden dogrulaniyordu (bkz. app.js initAuth) -
      bu dogrulama bitene kadar altta zaten GORUNUR olan giris ekrani (bos
      anahtar kutusu) yanip sonup kullaniciyi "her acilista giris ekranina
      dusuyorum" sandırıyordu. Bu ekran, dogrulama SURESINCE giris formunun
@@ -336,18 +336,6 @@
             <div class="profile-item-label" data-i18n="profile.totalCut">Toplam Kesilen</div>
             <div class="profile-item-value" id="profile-total-completed">0</div>
           </div>
-        </div>
-        <div class="profile-item profile-item-wide">
-          <div class="profile-item-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h8M8 14h5"/></svg>
-          </div>
-          <div class="profile-item-body">
-            <div class="profile-item-label" data-i18n="profile.hwid">Cihaz Kimliği (HWID)</div>
-            <div class="profile-item-value" id="profile-hwid-value">—</div>
-          </div>
-          <button class="icon-btn-sm" id="profile-hwid-copy" aria-label="Cihaz kimliğini kopyala" data-i18n-aria="aria.copyHwid" type="button">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          </button>
         </div>
       </div>
       <div class="profile-history">

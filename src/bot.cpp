@@ -21,7 +21,7 @@ namespace {
 thread_local std::mt19937 g_rng{std::random_device{}()};
 
 // desktop_app.exe konsolsuz (WIN32_EXECUTABLE) calistigi icin std::cout
-// hicbir yere gitmiyor - discord_bot.cpp/keyauth_client.cpp/yolo_detector.cpp
+// hicbir yere gitmiyor - discord_bot.cpp/yolo_detector.cpp
 // ile AYNI desen: [click-debug] gibi kritik tanı satirlari (tespit->ekran
 // tiklama koordinat donusumu) GORUNMEDEN kayboluyordu, bu bir dosyaya da
 // yazilir ki tiklama koordinat sorunlari (ör. "tespit ettigi yerden uzaga

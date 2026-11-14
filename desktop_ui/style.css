@@ -711,11 +711,7 @@ input[type="checkbox"]:checked::after {
   font-size: 14px;
   font-weight: 700;
   color: var(--text);
-  /* Uzun degerler (lisans anahtari, HWID) ARTIK KIRPILMIYOR: eskiden
-     nowrap+ellipsis vardi ve HWID hep yarim
-     gorunuyordu - kullanici kendi cihaz kimligini panelden OKUYAMIYORDU.
-     Artik satira sigmayan deger alt satira sarar; "anywhere" sayesinde
-     bosluk icermeyen uzun kimlikler de dogru bolunur. */
+  /* Uzun degerler kirpilmaz, satira sigmazsa alt satira sarar. */
   white-space: normal;
   overflow-wrap: anywhere;
   line-height: 1.35;
@@ -1006,7 +1002,7 @@ body.bg-translucent .work-card {
    ----------------------------------------------------------------------------
    KURAL (kullanici talebi): "asla garip garip glowlar / ilginc seyler yok,
    temadan fazla sasmadan modernlestirme". Bu yuzden burada RENK KIMLIGI ya da
-   YERLESIM DEGISTIRILMEZ - sadece cagdas arayuzlerin (Linear/Vercel benzeri)
+   YERLESIM DEGISTIRILMEZ - sadece cagdas arayuzlerin (modern)
    olcu aldigi uc sey rotuslanir:
      1) Yuzeyler: kart kenarlari + YUMUSAK, asagi dusen golge ile "kagit gibi"
         ayrisir (parlama/neon YOK).
@@ -1243,13 +1239,6 @@ body.bg-translucent .discord-card {
 /* Profil detay kartlari: iki sutunlu, daha ferah bir izgara. */
 .profile-grid { gap: 8px; }
 .profile-item { border-radius: var(--radius); }
-
-/* CIHAZ KIMLIGI (HWID) karti (kullanici talebi): degeri digerlerinden COK daha
-   uzun oldugu icin dar sutunda alt satira sariyor, kart tek basina kisa kaliyor
-   ve ustundeki .profile-hero seridiyle hizalanmiyordu. Tum izgara genisligine
-   yayarak diger kartlarla PARALEL/hizali hale getiriyoruz - HWID de boylece
-   tek satirda okunur. */
-.profile-item.profile-item-wide { grid-column: 1 / -1; }
 
 /* ============================================================================
    DAR PENCERE UYUMU

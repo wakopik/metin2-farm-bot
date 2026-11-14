@@ -348,38 +348,4 @@ void KillProcessOwningWindow(HWND hwnd) {
     CloseHandle(proc);
 }
 
-std::string GetMachineHwid() {
-    HKEY key;
-    // KEY_WOW64_64KEY: bu deger 32/64-bit surumden BAGIMSIZ HER ZAMAN ayni
-    // (gercek/tek) kayit defteri konumundan okunsun diye - aksi halde 32-bit
-    // bir derleme, WOW6432Node yonlendirmesi yuzunden FARKLI (yanlis) bir
-    // yerden okuyabilirdi.
-    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Cryptography", 0, KEY_READ | KEY_WOW64_64KEY,
-                       &key) != ERROR_SUCCESS) {
-        return "";
-    }
-    char buf[256] = {0};
-    DWORD size = sizeof(buf) - 1;
-    DWORD type = 0;
-    std::string result;
-    if (RegQueryValueExA(key, "MachineGuid", nullptr, &type, reinterpret_cast<LPBYTE>(buf), &size) ==
-            ERROR_SUCCESS &&
-        type == REG_SZ) {
-        result = buf;
-    }
-    RegCloseKey(key);
-    return result;
-}
-
-std::string GetLocalComputerName() {
-    wchar_t buf[256] = {0};
-    DWORD size = sizeof(buf) / sizeof(buf[0]);
-    if (!GetComputerNameW(buf, &size)) return "";
-    int utf8Len = WideCharToMultiByte(CP_UTF8, 0, buf, -1, nullptr, 0, nullptr, nullptr);
-    if (utf8Len <= 0) return "";
-    std::string out(utf8Len - 1, '\0');
-    WideCharToMultiByte(CP_UTF8, 0, buf, -1, out.data(), utf8Len, nullptr, nullptr);
-    return out;
-}
-
 }  // namespace win_window

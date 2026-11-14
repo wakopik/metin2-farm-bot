@@ -101,18 +101,4 @@ RECT GetCapturedFrameRectOnScreen(HWND hwnd);
 // durdurma aninda cagrilmalidir, bkz. desktop_app_main.cpp SchedulerLoop.
 void KillProcessOwningWindow(HWND hwnd);
 
-// CIHAZ KILIDI icin: bu bilgisayara ozgu, Windows kurulumlari arasinda
-// PRATIKTE benzersiz ve YENIDEN BASLATMALAR/format DISINDA SABIT kalan bir
-// kimlik dondurur (Windows'un kendi MachineGuid degeri - kayit defterinden
-// okunur, YAZMA/yonetici yetkisi GEREKMEZ). Okunamazsa (cok nadir) bos
-// string doner - bkz. desktop_app_main.cpp CheckLicenseKey, bos donduyse
-// cihaz kilidi guvenlik geregi DEVRE DISI birakilir (asla "her zaman ayni"
-// sabit bir deger kullanilmaz, bu TUM cihazlari ayni sayardi).
-std::string GetMachineHwid();
-
-// Lisans panelinde "Cihaz Adi" olarak gosterilir - kullanicinin Windows
-// bilgisayar adi (Ayarlar > Sistem > Hakkinda). Salt bilgi amaclidir,
-// HWID gibi bir kimlik dogrulama degeri DEGILDIR.
-std::string GetLocalComputerName();
-
 }  // namespace win_window

@@ -182,23 +182,7 @@ function showDashboard() {
     setKeyDisplays();
     startExpiryCountdown();
     startRelicenseTimer();
-    loadDeviceInfo();
   });
-}
-
-// Profil sekmesindeki HWID alani - degismedigi icin (ayni oturum boyunca)
-// TEK SEFERLIK cekilir, periyodik yenilemeye gerek yok.
-async function loadDeviceInfo() {
-  const el = document.getElementById("profile-hwid-value");
-  if (!el) return;
-  try {
-    const res = await fetch("/api/device-info");
-    const data = await res.json();
-    el.textContent = data.hwid || "—";
-    el.title = data.hwid || "";
-  } catch {
-    el.textContent = "—";
-  }
 }
 
 // ---------------- Anahtar goster/gizle (Profil sekmesi) ----------------
@@ -219,8 +203,8 @@ document.getElementById("profile-key-toggle")?.addEventListener("click", () => {
   setKeyDisplays();
 });
 
-// ---------------- Kopyala butonlari (anahtar + HWID) ----------------
-// Profil sekmesinde anahtar/HWID'yi elle yazip HATA yapmadan (ör. destek
+// ---------------- Kopyala butonu (anahtar) ----------------
+// Profil sekmesinde anahtari elle yazip HATA yapmadan (ör. destek
 // talebine yapistirmak icin) kopyalamak icin.
 async function copyToClipboard(text, btn) {
   if (!text) return;
@@ -240,16 +224,12 @@ async function copyToClipboard(text, btn) {
 document.getElementById("profile-key-copy")?.addEventListener("click", (e) => {
   copyToClipboard(getStoredKey(), e.currentTarget);
 });
-document.getElementById("profile-hwid-copy")?.addEventListener("click", (e) => {
-  const el = document.getElementById("profile-hwid-value");
-  copyToClipboard(el?.title || el?.textContent || "", e.currentTarget);
-});
 function showLogin() {
   crossFade(dashboardScreen, loginScreen, () => stopPolling());
 }
 
 // ---------------- Kalan Sure (uyelik bitis geri sayimi) ----------------
-// Bitis zamani KeyAuth (keyauth.cc) SUNUCUSUNUN kendisinden gelir (bkz.
+// Bitis zamani lisans sunucusunun kendisinden gelir (bkz.
 // desktop_app_main.cpp /api/login) - HER basarili girişte TAZELENIR
 // (Dashboard'da sure uzatilmis/degistirilmis olabilir), sadece CANLI
 // (saniyede bir) geri sayim icin cihazda (localStorage) tutulur.
@@ -259,7 +239,7 @@ let expiryTimer = null;
 let relicenseTimer = null;
 let loggingOut = false;  // updateExpiryCountdown ve relicense kontrolu AYNI anda tetiklenirse cift cikisi engeller
 
-// KeyAuth Dashboard'dan anahtar iptal edilirse/suresi biterse, kullaniciyi
+// Lisans panelinden anahtar iptal edilirse/suresi biterse, kullaniciyi
 // oturum SIRASINDA (sadece bir sonraki girişte degil) atar: botu durdurur,
 // oturumu temizler, giris ekranina donup NEDENI gosterir - bkz.
 // checkLicenseWithServer / updateExpiryCountdown / periodik yeniden kontrol.
@@ -286,7 +266,7 @@ async function forceLogout(message) {
   loggingOut = false;
 }
 
-// KeyAuth SUNUCUSUNA karsi anahtari yeniden dogrular (init+license, HWID
+// Lisans sunucusuna karsi anahtari yeniden dogrular (init+license, HWID
 // dahil) - basarili olursa {ok:true, ...} doner ve expiry'yi TAZELER,
 // basarisiz olursa false doner (cagiran taraf forceLogout etmeli).
 async function checkLicenseWithServer(key) {
@@ -313,7 +293,7 @@ async function checkLicenseWithServer(key) {
 // hayatta olmasindan BAGIMSIZ olarak dogrular ve sonucu /api/status ile
 // bildirir (bkz. render()). Buradaki JS zamanlayicisi sadece IKINCI bir
 // guvenlik agi; bu yuzden araligi 5 dakikadan 15 dakikaya cikarildi -
-// ikisi ayni anda KeyAuth'a gidince "tek anahtar icin tek oturum" kurali
+// ikisi ayni anda lisans sunucusuna gidince "tek anahtar icin tek oturum" kurali
 // yuzunden birbirinin oturumunu gecersiz kilip HAKSIZ "Oturum bulunamadi"
 // hatasi uretebiliyordu.
 function startRelicenseTimer() {
@@ -322,7 +302,7 @@ function startRelicenseTimer() {
     const key = getStoredKey();
     if (!key) return;
     const data = await checkLicenseWithServer(key);
-    // data.network_error: yerel sunucuya ULASILDI ama O, KeyAuth'a
+    // data.network_error: yerel sunucuya ULASILDI ama O, lisans sunucusuna
     // ulasamadi (bkz. desktop_app_main.cpp /api/login). Bu durumda anahtarin
     // gecersiz oldugu SONUCU CIKARILAMAZ - kullaniciyi ATMIYORUZ, bir
     // sonraki turda tekrar denenir. Gecici internet kesintisinin oturumu
@@ -441,7 +421,7 @@ document.getElementById("update-retry-btn").addEventListener("click", () => {
 // GUNCELLEME KONTROLU - HER ACILISTA, HER SEYDEN ONCE (lisans kontrolunden
 // bile once). Amac: 3.0 yayinlandiginda 2.0 kullananlarin onune "Güncelleme
 // Mevcut" ekrani KESIN ciksin. Guncelleme sunucusuna ULASILAMAZSA (TLS/ag/
-// Vercel kesintisi) sunucu checked=false doner; bunu "guncelim" saymak yerine
+// sunucu kesintisi) sunucu checked=false doner; bunu "guncelim" saymak yerine
 // SESSIZCE GECMEDEN birkac kez TEKRAR DENERIZ. Ancak kalici bir kesintide
 // (tum denemeler basarisiz) yine de gecise izin veririz - yoksa guncelleme
 // servisi coktugunde HERKES uygulamadan kilitlenirdi.
@@ -477,7 +457,7 @@ async function checkForUpdate() {
   return false;
 }
 
-// Sayfa acilirken hatirlanan anahtar varsa - HER ACILISTA KeyAuth
+// Sayfa acilirken hatirlanan anahtar varsa - HER ACILISTA lisans
 // sunucusuna karsi YENIDEN dogrulanir (Dashboard'da iptal edilmis/suresi
 // bitmis olabilir, sadece localStorage'a guvenilmez). Dogrulama bitene
 // kadar hicbir ekran gosterilmez (ne panel ne giris) - gecersizse dogrudan
@@ -511,7 +491,7 @@ function playIntro() {
 (async function initAuth() {
   const saved = localStorage.getItem(AUTH_KEY) || sessionStorage.getItem(AUTH_KEY);
   // KULLANICI TALEBI: "Beni hatırla" ile kaydedilmis bir anahtar varsa,
-  // dogrulama (KeyAuth'a karsi, ne kadar surerse sursun - yavas internette
+  // dogrulama (lisans sunucusuna karsi, ne kadar surerse sursun - yavas internette
   // uzun bile surse) BITENE KADAR bos giris formunu DEGIL, net bir "kontrol
   // ediliyor" gostergesini goster - "her acilista giris ekranina dusuyorum"
   // hissi buradan geliyordu.
@@ -532,7 +512,7 @@ function playIntro() {
   const data = await checkLicenseWithServer(saved || "oss");
   sessionCheckScreen.classList.add("hidden");
   await playIntro();
-  // data.network_error: KeyAuth'a ULASILAMADI (bkz. startRelicenseTimer
+  // data.network_error: lisans sunucusuna ULASILAMADI (bkz. startRelicenseTimer
   // yorumu). Anahtarin gecersiz oldugu SONUCU CIKARILAMAZ - acilista
   // internet gecici olarak yokken kullaniciyi giris ekranina ATMIYORUZ.
   if (!data.ok && !data.network_error) {
@@ -548,7 +528,6 @@ function playIntro() {
   startExpiryCountdown();
   startRelicenseTimer();
   setKeyDisplays();
-  loadDeviceInfo();
 })();
 
 // ---------------- Buton dokunma (ripple) efekti ----------------
@@ -1917,7 +1896,7 @@ function render(data) {
   lastSnapshot = data;  // "Botu Kapat"a basilinca gecmise kaydedecegimiz en son bilinen durum
 
   // LISANS IPTALI - HER SEYDEN ONCE. Sunucudaki lisans bekcisi (bkz.
-  // desktop_app_main.cpp LicenseWatchdogLoop) anahtarin KeyAuth panelinden
+  // desktop_app_main.cpp LicenseWatchdogLoop) anahtarin lisans panelinden
   // silindigini/iptal edildigini ya da suresinin doldugunu tespit ettiyse
   // burayi isaretler. Bu fonksiyon 250ms'de bir calistigi icin kullanici
   // en gec birkac yuz milisaniye icinde disari alinir - eskiden bu SADECE
@@ -1929,7 +1908,7 @@ function render(data) {
     return;
   }
 
-  // KALAN SURE: tek yetkili kaynak KeyAuth. Sunucu her basarili kontrolde
+  // KALAN SURE: tek yetkili kaynak lisans sunucusu. Sunucu her basarili kontrolde
   // bunu tazeledigi icin, panelden sure UZATILIRSA uygulamayi yeniden
   // baslatmaya gerek kalmadan guncel sure gorunur (eskiden sure yalnizca
   // giris aninda alinip localStorage'da donuyordu).

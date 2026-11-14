@@ -12,7 +12,7 @@
 namespace {
 // desktop_app.exe konsolsuz (WIN32_EXECUTABLE) calistigi icin std::cout
 // HICBIR YERE gitmiyor (normal cift-tiklama ile acilinca kaybolur) -
-// discord_bot.cpp/keyauth_client.cpp'deki AYNI desen: modelin GERCEKTEN
+// discord_bot.cpp'deki AYNI desen: modelin GERCEKTEN
 // yuklenip yuklenmedigini/calisirken ne buldugunu DOSYAYA da yaz ki
 // "gercekten baglandik mi" sorusu her zaman kontrol edilebilsin.
 void Log(const std::string& msg) {

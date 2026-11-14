@@ -1856,9 +1856,9 @@ static void RunLocalServer() {
     // basligi ekleyerek bu sinif hatayi TAMAMEN ortadan kaldiriyoruz.
     svr.set_default_headers({{"Cache-Control", "no-store, no-cache, must-revalidate"}, {"Pragma", "no-cache"}});
     svr.set_mount_point("/", "desktop_ui");
-    // KRITIK: /api/login gibi handler'lar KeyAuth'a IKI ARDISIK HTTPS
+    // KRITIK: /api/login gibi handler'lar lisans sunucusuna IKI ARDISIK HTTPS
     // cagrisi (init + license) yapar, HER BIRI 10 saniyeye kadar surebilir
-    // (bkz. keyauth_client.cpp timeout'lari) - ILK acilista (sogumus
+    // (lisans istemcisinin timeout'lari) - ILK acilista (sogumus
     // DNS/TLS onbellegi) bu toplamda cpp-httplib'in VARSAYILAN sunucu
     // okuma/yazma zaman asimini (birkac saniye) asabilir, bu da baglanti
     // handler BITMEDEN kapanip istemcide "Sunucuya bağlanılamadı" gibi
@@ -1866,10 +1866,10 @@ static void RunLocalServer() {
     // BASARIYLA tamamlanmis olabilir (StoreLicenseState zaten cagrilmis
     // olur, bir sonraki acilista hatirlanan anahtarla OTOMATIK giris
     // basarili olur - kullanicinin bildirdigi TAM DESEN bu). Sunucu
-    // zaman asimini cömertce artiriyoruz ki YAVAS ama BASARILI bir KeyAuth
+    // zaman asimini cömertce artiriyoruz ki YAVAS ama BASARILI bir lisans
     // yaniti asla yarida kesilmesin.
-    // KRITIK GUCLENDIRME: KeyAuth Init+CheckLicense her biri KENDI icinde
-    // 2 deneme x 15sn (bkz. keyauth_client.cpp) yapabiliyor - kotu senaryoda
+    // KRITIK GUCLENDIRME: Lisans init+check her biri KENDI icinde
+    // 2 deneme x 15sn (lisans istemcisi) yapabiliyor - kotu senaryoda
     // (soguk TLS/DNS onbellegi, ozellikle ILK acilista) TOPLAMDA 60 saniyeye
     // kadar surebilir. Onceki 30sn deger BU KOTU SENARYOYU KAPSAMIYORDU -
     // kullanicinin bildirdigi "ilk giriste sunucuya baglanilamadi, ac-kapa
@@ -1881,7 +1881,7 @@ static void RunLocalServer() {
     // "LGN ... tt=1.28 ok=1" satirlari KANITLADI ki sunucu istegi 1.2 saniyede
     // BASARIYLA tamamliyor, ama yanit istemciye ULASMIYOR):
     //
-    // keep_alive_timeout ONCEDEN 75 saniyeydi. Bu deger, "yavas KeyAuth
+    // keep_alive_timeout ONCEDEN 75 saniyeydi. Bu deger, "yavas lisans
     // yanitina zaman tanimak" icin artirilmisti - AMA BU TAMAMEN YANLIS BIR
     // ANLAMAYDI: keep_alive_timeout, bir handler'in NE KADAR SUREBILECEGINI
     // HIC ETKILEMEZ (handler istedigi kadar surebilir). Bu deger SADECE
@@ -1908,7 +1908,7 @@ static void RunLocalServer() {
     svr.new_task_queue = [] { return new httplib::ThreadPool(64, 128); };
 
     // GUVENLIK AGI: bir /api/* handler'i BEKLENMEDIK bir istisna firlatirsa
-    // (ör. dis bir servisin - KeyAuth/Discord - yanitindaki bir alanin
+    // (ör. dis bir servisin - Discord - yanitindaki bir alanin
     // beklenmedik tipte olmasi), httplib'in VARSAYILAN 500 sayfasi DUZ
     // METIN/HTML doner - app.js'teki HER fetch().then(r => r.json())
     // cagrisi bunu ayristiramaz, catch bloguna duser ve YANILTICI "sunucuya
@@ -2316,7 +2316,7 @@ static void RunLocalServer() {
 
         std::string licenseMsg;
         // JS'teki giris kontrolunu ATLAYIP dogrudan bu uc noktaya istek
-        // atilsa BILE (ör. devtools/curl) bot BURADA taze bir KeyAuth
+        // atilsa BILE (ör. devtools/curl) bot BURADA taze bir lisans
         // dogrulamasi olmadan BASLAMAZ - bkz. VerifyLicenseNow.
         if (!VerifyLicenseNow(&licenseMsg)) {
             res.set_content(json{{"ok", false}, {"error", "license"}, {"message", licenseMsg}}.dump(), "application/json");
