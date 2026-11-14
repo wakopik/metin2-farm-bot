@@ -653,8 +653,9 @@ document.querySelectorAll(".nav-item").forEach((btn) => {
 });
 
 // ---------------- Sunucu secimi (kart-secici) ----------------
-// Liste /api/servers'tan (lisans sunucusu servers.php) gelir; ulasilamazsa
-// asagidaki gomulu varsayilan listeye duser (uygulama cevrimdisi de calissin).
+// Liste /api/servers'tan gelir (exe'nin yanindaki servers.json, yoksa ornek
+// liste); "Sunucu ekle" ile eklenenler de oraya yazilir. Ulasilamazsa
+// asagidaki gomulu varsayilan listeye duser.
 // window_title -> bot.cpp/win_window'un aradigi gercek oyun penceresi basligi.
 const DEFAULT_SERVERS = [
   { slug: "misali2",    name: "Misali2",      window_title: "Misali2",      status: "active", logo: null, note: null },
@@ -712,12 +713,68 @@ function renderServerGrid() {
         ${state}
       </button>`;
     })
-    .join("");
+    .join("") +
+    `<button type="button" class="server-card server-card-add" id="sp-add-card">
+      <span class="sc-logo"><span class="sp-logo-fallback">+</span></span>
+      <span class="sc-name">${spEscapeHtml(t("server.add"))}</span>
+    </button>`;
 
-  spGrid.querySelectorAll(".server-card:not(.disabled)").forEach((el) => {
+  spGrid.querySelectorAll(".server-card:not(.disabled):not(.server-card-add)").forEach((el) => {
     el.addEventListener("click", (e) => { e.stopPropagation(); selectServer(el.dataset.slug); });
   });
+  document.getElementById("sp-add-card")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    showServerAddForm(true);
+  });
 }
+
+// ---------------- Sunucu ekle (servers.json'a yazilir) ----------------
+const spAddForm = document.getElementById("sp-add-form");
+const spAddName = document.getElementById("sp-add-name");
+const spAddTitle = document.getElementById("sp-add-title");
+const spAddError = document.getElementById("sp-add-error");
+
+function showServerAddForm(show) {
+  if (!spAddForm) return;
+  spAddForm.classList.toggle("hidden", !show);
+  spGrid.classList.toggle("hidden", show);
+  spAddError.classList.add("hidden");
+  if (show) {
+    spAddName.value = "";
+    spAddTitle.value = "";
+    spAddName.focus();
+  }
+  if (spPanel.classList.contains("open")) spPanel.style.height = "auto";
+}
+
+document.getElementById("sp-add-cancel")?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  showServerAddForm(false);
+});
+spAddForm?.addEventListener("click", (e) => e.stopPropagation());
+spAddForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const name = spAddName.value.trim();
+  const showError = (key) => {
+    spAddError.textContent = t(key);
+    spAddError.classList.remove("hidden");
+  };
+  if (!name) return showError("server.addErrName");
+  try {
+    const res = await fetch("/api/servers/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, window_title: spAddTitle.value.trim() }),
+    });
+    const data = await res.json();
+    if (!data.success || !Array.isArray(data.servers)) return showError("server.addErrSave");
+    serverList = data.servers;
+    showServerAddForm(false);
+    selectServer(data.added);
+  } catch {
+    showError("server.addErrSave");
+  }
+});
 
 function statusBadgeIcon(st) {
   // Bakim: anahtar. Pasif: durdurma. Metin yerine ikon - kart kalabaliklasmiyor.
@@ -805,11 +862,7 @@ document.addEventListener("click", (e) => {
 
 async function loadServers() {
   try {
-    // UYEYE OZEL SUNUCU: lisans anahtarini gonder - sunucu tarafi herkese
-    // acik olanlara EK olarak bu uyeye ozel sunuculari da dondurur.
-    let key = "";
-    try { key = localStorage.getItem(AUTH_KEY) || ""; } catch {}
-    const res = await fetch("/api/servers" + (key ? "?key=" + encodeURIComponent(key) : ""));
+    const res = await fetch("/api/servers");
     const data = await res.json();
     if (data && data.success && Array.isArray(data.servers) && data.servers.length) {
       serverList = data.servers;
@@ -820,7 +873,7 @@ async function loadServers() {
       if (data.default && !kayitli) selectedServer = data.default;
     }
   } catch {
-    /* lisans sunucusu ulasilamadi - gomulu varsayilan liste kullanilir */
+    /* yerel API ulasilamadi - gomulu varsayilan liste kullanilir */
   }
   // Secili sunucu listede yoksa YA DA artik secilemez (bakim/pasif) durumdaysa,
   // ilk AKTIF sunucuya dus - kullanici pasif bir sunucuyla baslatamasin.

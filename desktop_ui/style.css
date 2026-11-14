@@ -1924,3 +1924,11 @@ body.bg-translucent .discord-card {
 .toast-warn  .toast-icon { color: var(--warning); }
 .toast-info  .toast-icon { color: var(--text-dim); }
 .toast-text { min-width: 0; }
+
+/* Sunucu ekle: kart + form */
+.server-card-add .sp-logo-fallback { font-size: 22px; }
+.server-card-add { border: 1px dashed var(--border); }
+.sp-add-form { padding: 2px 14px 14px; }
+.sp-add-form input[type="text"] { padding: 0 12px; margin-bottom: 12px; }
+.sp-add-error { color: var(--danger); font-size: 12px; margin: -4px 0 10px; }
+.sp-add-actions { display: flex; justify-content: flex-end; gap: 8px; }

@@ -992,6 +992,45 @@ static json LocalServerList() {
     return json{{"success", true}, {"default", "ornek"}, {"servers", servers}};
 }
 
+// Arayuzdeki "Sunucu ekle" formu: listeye yeni sunucu ekleyip servers.json'a
+// yazar. Pencere basligi bos birakilirsa sunucu adi kullanilir.
+static std::mutex g_serversMutex;
+static json AddLocalServer(const std::string& name, std::string windowTitle) {
+    if (windowTitle.empty()) windowTitle = name;
+    if (name.empty() || name.size() > 60 || windowTitle.size() > 120)
+        return json{{"success", false}, {"error", "invalid"}};
+
+    std::lock_guard<std::mutex> lock(g_serversMutex);
+    json list = LocalServerList();
+    json& servers = list["servers"];
+
+    std::string base;
+    for (unsigned char c : name) {
+        if (std::isalnum(c)) base += static_cast<char>(std::tolower(c));
+        else if (!base.empty() && base.back() != '-') base += '-';
+    }
+    while (!base.empty() && base.back() == '-') base.pop_back();
+    if (base.empty()) base = "sunucu";
+    auto taken = [&](const std::string& s) {
+        for (const auto& sv : servers) if (sv.value("slug", "") == s) return true;
+        return false;
+    };
+    std::string slug = base;
+    for (int i = 2; taken(slug); ++i) slug = base + "-" + std::to_string(i);
+
+    servers.push_back(json{{"slug", slug}, {"name", name}, {"window_title", windowTitle},
+                           {"status", "active"}, {"logo", nullptr}, {"note", nullptr}});
+    list.erase("success");
+    std::ofstream f("servers.json", std::ios::trunc);
+    if (!f.is_open()) return json{{"success", false}, {"error", "write"}};
+    f << list.dump(2);
+    f.close();
+
+    list["success"] = true;
+    list["added"] = slug;
+    return list;
+}
+
 // ============================================================================
 // DISCORD ENTEGRASYONU (OAuth baglama): AWAIT eden asil kod-degisim
 // (code -> access token) adimi Discord'un HTTPS API'sine cikis yapmayi
@@ -2148,6 +2187,15 @@ static void RunLocalServer() {
     // SUNUCU LISTESI: yerel liste (bkz. LocalServerList).
     svr.Get("/api/servers", [](const httplib::Request&, httplib::Response& res) {
         res.set_content(LocalServerList().dump(), "application/json");
+    });
+    svr.Post("/api/servers/add", [](const httplib::Request& req, httplib::Response& res) {
+        json body = json::parse(req.body, nullptr, false);
+        if (body.is_discarded() || !body.is_object()) {
+            res.set_content(json{{"success", false}, {"error", "invalid"}}.dump(), "application/json");
+            return;
+        }
+        res.set_content(AddLocalServer(body.value("name", ""), body.value("window_title", "")).dump(),
+                        "application/json");
     });
 
     // ---------------------- KALIBRASYON ----------------------

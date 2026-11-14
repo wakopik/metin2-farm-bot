@@ -268,6 +268,17 @@
         <div class="sp-panel" id="sp-panel">
           <div class="sp-panel-inner">
             <div class="server-grid" id="server-grid"></div>
+            <form class="sp-add-form hidden" id="sp-add-form" autocomplete="off">
+              <label class="field-label" for="sp-add-name" data-i18n="server.addName">Sunucu adı</label>
+              <input type="text" id="sp-add-name" maxlength="30" data-i18n-ph="server.addNamePh" placeholder="ör. Misali2" />
+              <label class="field-label" for="sp-add-title" data-i18n="server.addTitle">Pencere başlığı (isteğe bağlı)</label>
+              <input type="text" id="sp-add-title" maxlength="60" data-i18n-ph="server.addTitlePh" placeholder="Boş bırakılırsa sunucu adı kullanılır" />
+              <p class="sp-add-error hidden" id="sp-add-error"></p>
+              <div class="sp-add-actions">
+                <button type="button" class="btn-ghost" id="sp-add-cancel" data-i18n="server.addCancel">İptal</button>
+                <button type="submit" class="btn-primary" id="sp-add-save" data-i18n="server.addSave">Ekle</button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
