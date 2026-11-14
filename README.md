@@ -189,6 +189,16 @@ Orijinal projede bulunan şu kısımlar açık kaynak sürüme **alınmadı**:
 
 ## Lisans / License
 
-[MIT](LICENSE) © wakopik
+| Bölüm / Part | Lisans / License |
+|---|---|
+| Kaynak kod / Source code | [MIT](LICENSE) © wakopik |
+| YOLO modelleri / YOLO models (`models/*.onnx`) | [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html) |
+| Arayüz fontu / UI font (Plus Jakarta Sans) | [SIL OFL 1.1](desktop_ui/fonts/OFL.txt) |
 
-Arayüz fontu Plus Jakarta Sans, [SIL OFL 1.1](desktop_ui/fonts/OFL.txt) ile dağıtılır. / The UI font is licensed under SIL OFL 1.1.
+`models/` altındaki modeller [Ultralytics YOLOv8](https://github.com/ultralytics/ultralytics)
+ile eğitilmiştir ve Ultralytics'in lisans koşulları gereği AGPL-3.0 kapsamındadır.
+Kaynak kod Ultralytics kodu içermez ve MIT lisanslıdır.
+
+The models in `models/` were trained with Ultralytics YOLOv8 and fall under
+AGPL-3.0 per Ultralytics' license terms. The source code contains no
+Ultralytics code and is MIT licensed.
