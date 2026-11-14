@@ -1,0 +1,27 @@
+# Derleme ciktilari
+build/
+out/
+dist/
+.vs/
+vcpkg_installed/
+*.exe
+*.dll
+*.pdb
+*.zip
+
+# Calisma aninda olusan dosyalar (kisisel veri / tani kayitlari icerebilir)
+*.log
+diag.log
+license_state.json
+discord_link.json
+telegram_link.json
+servers.json
+wv2data/
+manual_scan/
+metin/
+puzzle_kayit/
+m2hype_kayit/
+desktop_app_errors.log
+
+# Yerel ayar kopyalari - token'larinizi buraya koyun, ASLA commit etmeyin
+config.local.json

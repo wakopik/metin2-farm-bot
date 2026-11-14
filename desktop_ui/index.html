@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Elbit</title>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+
+<!-- ==================== GUNCELLEME ZORUNLU EKRANI ==================== -->
+<div id="update-screen" class="screen hidden">
+  <div class="login-card update-card fade-up">
+    <div class="update-icon">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M20.3 4.4A19.7 19.7 0 0 0 15.6 3c-.2.4-.5.9-.7 1.3a18 18 0 0 0-5.8 0A9 9 0 0 0 8.4 3a19.6 19.6 0 0 0-4.7 1.4C1 9 .3 13.5.6 18a19.8 19.8 0 0 0 6 3c.5-.6.9-1.3 1.3-2a13 13 0 0 1-2-1s.2-.1.3-.2a14.2 14.2 0 0 0 12 0l.3.2a13 13 0 0 1-2 1c.4.7.8 1.4 1.3 2a19.7 19.7 0 0 0 6-3c.4-5.2-1-9.6-3.5-13.6ZM8.7 15.3c-1.1 0-2-1-2-2.3s.9-2.3 2-2.3 2 1 2 2.3-.9 2.3-2 2.3Zm6.6 0c-1.1 0-2-1-2-2.3s.9-2.3 2-2.3 2 1 2 2.3-.9 2.3-2 2.3Z"/></svg>
+    </div>
+    <h1 class="update-title" data-i18n="update.title">Güncelleme Mevcut!</h1>
+    <p class="update-message" id="update-message" data-i18n="update.message">Yazılımın yeni bir sürümü yayınlandı.</p>
+    <button id="update-discord-btn" class="btn-primary btn-block" data-i18n="update.discordBtn">Discord Sunucusuna Git</button>
+    <button id="update-retry-btn" class="btn-ghost btn-block" style="margin-top:10px" data-i18n="update.retryBtn">Tekrar Dene</button>
+  </div>
+</div>
+
+<!-- ================= OTURUM KONTROL (Beni Hatırla) EKRANI =================
+     "Beni hatırla" ile kaydedilmis bir anahtar varsa, sayfa acilir acilmaz
+     KeyAuth'a karsi SESSIZCE yeniden dogrulaniyordu (bkz. app.js initAuth) -
+     bu dogrulama bitene kadar altta zaten GORUNUR olan giris ekrani (bos
+     anahtar kutusu) yanip sonup kullaniciyi "her acilista giris ekranina
+     dusuyorum" sandırıyordu. Bu ekran, dogrulama SURESINCE giris formunun
+     ONUNE gecip net bir "kontrol ediliyor" mesaji gosterir - dogrulama ne
+     kadar surerse sursun (yavas internet dahil) kullanici BOS bir giris
+     formu GORMEZ, sadece bu donen gostergeyi gorur. -->
+<div id="session-check-screen" class="screen hidden">
+  <div class="login-card fade-up" style="text-align:center">
+    <div class="session-check-spinner"></div>
+    <p class="session-check-text" id="session-check-text" data-i18n="session.checkText">Oturumunuz kontrol ediliyor, yönlendiriliyorsunuz...</p>
+  </div>
+</div>
+
+<!-- ========================= ACILIS ANIMASYONU =========================
+     Guncelleme/oturum kontrolu BITTIKTEN SONRA, giris veya panel
+     gosterilmeden hemen once bir kez oynar. Tamamen CSS - kutuphane yok,
+     JS her karede calismaz (transform/opacity uzerinden GPU'da akar).
+
+     Sahne sirasi:
+       1) Sahne yumusakca belirir
+       2) Capraz kiliclar disaridan gelip hafif tasmayla yerine oturur
+       3) Kesistikleri anda sessiz bir isik vurusu
+       4) Kalkanin konturu tek seferde cizilir
+       5) Kontur dolar, uzerinden metalik bir parilti gecer
+       6) "E" oturur, iki halka disa acilip soner
+       7) "Elbit" harfleri TEK TEK belirir, altina ince bir cizgi acilir
+       8) Sahne hafifce yukselerek kaybolur -->
+<div id="intro-screen" class="screen hidden">
+  <div class="intro-stage" id="intro-stage">
+    <div class="intro-glow"></div>
+    <svg class="intro-mark" viewBox="0 0 120 120" aria-hidden="true">
+      <defs>
+        <clipPath id="introShieldClip"><path d="M60 7 17.5 23v32.5c0 28 18 48 42.5 57.5 24.5-9.5 42.5-29.5 42.5-57.5V23L60 7Z" /></clipPath>
+        <linearGradient id="introSheen" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#fff" stop-opacity="0" />
+          <stop offset=".5" stop-color="#fff" stop-opacity=".7" />
+          <stop offset="1" stop-color="#fff" stop-opacity="0" />
+        </linearGradient>
+        <radialGradient id="introSpark">
+          <stop offset="0" stop-color="#fff" stop-opacity=".85" />
+          <stop offset="1" stop-color="#fff" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+
+      <!-- Capraz kiliclar (kalkanin ARKASINDA) -->
+      <g class="intro-swords">
+        <g class="intro-sword intro-sword-l"><path d="M0 -50 4 -41 4 21 -4 21 -4 -41Z" /><path d="M-14 21h28v6h-28z" /><path d="M-3 29h6v13h-6z" /><circle cx="0" cy="45" r="4" /></g>
+        <g class="intro-sword intro-sword-r"><path d="M0 -50 4 -41 4 21 -4 21 -4 -41Z" /><path d="M-14 21h28v6h-28z" /><path d="M-3 29h6v13h-6z" /><circle cx="0" cy="45" r="4" /></g>
+      </g>
+
+      <!-- Kiliclarin kesistigi anda tek, sessiz isik vurusu -->
+      <circle class="intro-spark" cx="60" cy="60" r="30" fill="url(#introSpark)" />
+
+      <!-- Kalkan: once konturu CIZILIR, sonra ici dolar -->
+      <path class="intro-shield-fill" d="M60 7 17.5 23v32.5c0 28 18 48 42.5 57.5 24.5-9.5 42.5-29.5 42.5-57.5V23L60 7Z" />
+      <path class="intro-shield-line" d="M60 7 17.5 23v32.5c0 28 18 48 42.5 57.5 24.5-9.5 42.5-29.5 42.5-57.5V23L60 7Z" />
+
+      <!-- Metalik parilti: sadece kalkanin ici boyanir (clip) -->
+      <g clip-path="url(#introShieldClip)">
+        <g class="intro-sheen">
+          <rect x="-34" y="-14" width="30" height="148" fill="url(#introSheen)" transform="skewX(-16)" />
+        </g>
+      </g>
+
+      <text class="intro-e" x="60" y="58" text-anchor="middle" dominant-baseline="central">E</text>
+
+      <!-- Disa acilan iki halka - ikincisi daha ince ve gecikmeli -->
+      <circle class="intro-ring intro-ring-1" cx="60" cy="60" r="44" />
+      <circle class="intro-ring intro-ring-2" cx="60" cy="60" r="44" />
+    </svg>
+
+    <div class="intro-word"><span style="--i:0">E</span><span style="--i:1">l</span><span style="--i:2">b</span><span style="--i:3">i</span><span style="--i:4">t</span></div>
+    <div class="intro-rule"></div>
+  </div>
+</div>
+
+<!-- ============================= GIRIS EKRANI ============================= -->
+<div id="login-screen" class="screen">
+  <div class="login-card fade-up">
+    <!-- Giris ekrani sag ust: giris ONCESI dil secimi (bayrak-only kompakt). -->
+    <div class="lang-switch lang-switch-corner" id="lang-switch-login">
+      <button type="button" class="lang-btn" data-lang="tr" aria-label="Türkçe" data-i18n-aria="lang.tr">
+        <span class="flag flag-tr" aria-hidden="true"><svg viewBox="0 0 24 16"><rect width="24" height="16" fill="#E30A17"/><circle cx="9" cy="8" r="4.2" fill="#fff"/><circle cx="10.3" cy="8" r="3.3" fill="#E30A17"/><polygon points="14.6,5.5 15.35,7.35 17.35,7.35 15.75,8.55 16.35,10.4 14.6,9.25 12.85,10.4 13.45,8.55 11.85,7.35 13.85,7.35" fill="#fff"/></svg></span>
+        <span>TR</span>
+      </button>
+      <button type="button" class="lang-btn" data-lang="en" aria-label="English" data-i18n-aria="lang.en">
+        <span class="flag flag-en" aria-hidden="true"><svg viewBox="0 0 24 16"><rect width="24" height="16" fill="#012169"/><path d="M0 0 24 16 M24 0 0 16" stroke="#fff" stroke-width="3.2"/><path d="M0 0 24 16 M24 0 0 16" stroke="#C8102E" stroke-width="1.6"/><rect x="9.6" width="4.8" height="16" fill="#fff"/><rect y="5.6" width="24" height="4.8" fill="#fff"/><rect x="10.8" width="2.4" height="16" fill="#C8102E"/><rect y="6.8" width="24" height="2.4" fill="#C8102E"/></svg></span>
+        <span>EN</span>
+      </button>
+    </div>
+    <div class="brand">
+      <svg class="logo-mark" width="34" height="34" viewBox="0 0 24 24">
+        <path d="M12 1.4 3.5 4.6v6.5c0 5.6 3.6 9.6 8.5 11.5 4.9-1.9 8.5-5.9 8.5-11.5V4.6L12 1.4Z" fill="var(--accent)"/>
+        <text x="12" y="12" text-anchor="middle" dominant-baseline="central" font-family="'Inter', 'Segoe UI', sans-serif" font-weight="700" font-size="10" letter-spacing="-0.3" fill="#06110e">E</text>
+      </svg>
+      <div class="brand-text">
+        <span class="brand-name">Elbit</span>
+      </div>
+    </div>
+    <form id="login-form">
+      <label class="field-label" for="key-input" data-i18n="login.keyLabel">Anahtar</label>
+      <div class="input-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/></svg>
+        <input id="key-input" type="password" placeholder="anahtar" autocomplete="off" />
+        <button type="button" id="toggle-key-visibility" class="input-icon-btn" aria-label="Anahtarı göster/gizle" data-i18n-aria="login.keyToggleAria">
+          <svg id="eye-open" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg id="eye-closed" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a17.7 17.7 0 0 1-2.94 3.94M6.06 6.06A17.75 17.75 0 0 0 1 12s4 8 11 8a9.16 9.16 0 0 0 5.94-2.06"/><path d="M9.5 9.67A3 3 0 0 0 12 15a3 3 0 0 0 2.35-1.15"/><path d="M2 2l20 20"/></svg>
+        </button>
+      </div>
+      <label class="checkbox-row">
+        <input id="remember-input" type="checkbox" checked />
+        <span data-i18n="login.remember">Beni hatırla</span>
+      </label>
+      <div id="login-error" class="alert-error hidden">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <span id="login-error-text"></span>
+      </div>
+      <button type="submit" class="btn-primary btn-block" data-i18n="login.submit">Giriş Yap</button>
+    </form>
+  </div>
+</div>
+
+<!-- ============================== ANA PANEL ================================ -->
+<div id="dashboard-screen" class="screen hidden">
+  <aside class="sidebar">
+    <div class="expiry-box">
+      <div class="expiry-label" data-i18n="sidebar.expiry">Kalan Süre</div>
+      <div class="expiry-value" id="expiry-countdown">—</div>
+    </div>
+
+    <!-- DIL SECICI: "Kalan Sure" kutusunun ALTINDA, kompakt. Emoji bayraklar
+         (WebView2'de "TR"/"GB" harf kutusu cikiyor) yerine inline SVG bayrak. -->
+    <div class="lang-switch" id="lang-switch">
+      <button type="button" class="lang-btn" data-lang="tr" aria-label="Türkçe" data-i18n-aria="lang.tr">
+        <span class="flag flag-tr" aria-hidden="true"><svg viewBox="0 0 24 16"><rect width="24" height="16" fill="#E30A17"/><circle cx="9" cy="8" r="4.2" fill="#fff"/><circle cx="10.3" cy="8" r="3.3" fill="#E30A17"/><polygon points="14.6,5.5 15.35,7.35 17.35,7.35 15.75,8.55 16.35,10.4 14.6,9.25 12.85,10.4 13.45,8.55 11.85,7.35 13.85,7.35" fill="#fff"/></svg></span>
+        <span>TR</span>
+      </button>
+      <button type="button" class="lang-btn" data-lang="en" aria-label="English" data-i18n-aria="lang.en">
+        <span class="flag flag-en" aria-hidden="true"><svg viewBox="0 0 24 16"><rect width="24" height="16" fill="#012169"/><path d="M0 0 24 16 M24 0 0 16" stroke="#fff" stroke-width="3.2"/><path d="M0 0 24 16 M24 0 0 16" stroke="#C8102E" stroke-width="1.6"/><rect x="9.6" width="4.8" height="16" fill="#fff"/><rect y="5.6" width="24" height="4.8" fill="#fff"/><rect x="10.8" width="2.4" height="16" fill="#C8102E"/><rect y="6.8" width="24" height="2.4" fill="#C8102E"/></svg></span>
+        <span>EN</span>
+      </button>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-item active" data-tab="dashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        <span data-i18n="nav.dashboard">Anasayfa</span>
+      </button>
+      <button class="nav-item" data-tab="profil">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+        <span data-i18n="nav.profile">Profil</span>
+      </button>
+      <button class="nav-item" data-tab="fonksiyonlar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span data-i18n="nav.functions">Fonksiyonlar</span>
+      </button>
+      <button class="nav-item" data-tab="manuel">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></svg>
+        <span data-i18n="nav.manual">Manuel Tarama</span>
+      </button>
+      <button class="nav-item" data-tab="tema">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.5-.7 1.5-1.5 0-.4-.2-.8-.4-1-.3-.3-.4-.6-.4-1 0-.8.7-1.5 1.5-1.5H16c3.3 0 6-2.7 6-6 0-4.9-4.5-9-10-9Z"/></svg>
+        <span data-i18n="nav.theme">Tema</span>
+      </button>
+      <button class="nav-item" data-tab="ayarlar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+        <span data-i18n="nav.settings">Ayarlar</span>
+      </button>
+    </nav>
+
+
+    <!-- CLIENT SAYISI GIRISI KALDIRILDI (kullanici talebi: "o alanı direkt
+         kaldıralım... seçilen sunucuda ne kadar pencere varsa onları
+         ekranın önüne getirip onlarda işlem yapsın"). Artik kullanici sayi
+         girmiyor - secilen sunucu basligiyla eslesen TUM pencereler otomatik
+         bulunup kullanilir (bkz. desktop_app_main.cpp NativeSession::Start -
+         max_clients artik cok yuksek bir tavan, FindAllGameWindows'un
+         bulduğu HER pencere kullanilir). -->
+
+    <!-- HEDEF LISTESI TAMAMEN KALDIRILDI (kullanici talebi: "metinleri
+         tamamen kaldir arayuzden, orada bos bos durmasinlar"). Secim zaten
+         yoktu - TUM metin turleri her zaman aktif (bkz. bot.cpp
+         DetectInFarmZone: modeller donusumlu calisir). Tur listesi app.js
+         tarafinda /api/metins'ten alinip dogrudan /api/start'a gonderilir,
+         arayuzde GOSTERILMEZ. -->
+
+    <!-- Baslat, Client Modu'nun HEMEN ALTINDA durur. Bosluk (flex:1) ARTIK
+         BURADA DEGIL, asagida: hedef listesi kaldirilinca aradaki bosluk
+         gereksiz bir bosluk olarak kaliyordu (kullanici bildirimi). Bosluk
+         Baslat'tan SONRAYA alindi, boylece Cikis Yap yine en altta kalir. -->
+    <div class="sidebar-section">
+      <button id="start-btn" class="btn-primary btn-block btn-lg" data-i18n="btn.start">Başlat</button>
+    </div>
+
+
+
+    <button id="logout-btn" class="btn-ghost btn-block logout-btn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+      <span data-i18n="btn.logout">Çıkış Yap</span>
+    </button>
+  </aside>
+
+  <main class="content">
+    <section id="tab-dashboard" class="tab-panel">
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-card-top">
+            <div class="stat-label" data-i18n="stat.farmTime">Farm Süresi</div>
+            <svg class="stat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+          </div>
+          <div class="stat-value" id="stat-duration">00:00</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-top">
+            <div class="stat-label" data-i18n="stat.cutText">Kesilen Metin</div>
+            <svg class="stat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/></svg>
+          </div>
+          <div class="stat-value" id="stat-completed">0</div>
+        </div>
+      </div>
+
+      <!-- CALISMA DURUMU kutusu kullanici talebiyle TAMAMEN KALDIRILDI.
+           app.js updateWorkCard bu id'leri null-guard ile arar (yoksa no-op). -->
+
+      <div id="character-info" class="character-list hidden"></div>
+
+      <div id="client-info" class="info-row hidden"></div>
+      <!-- SUNUCU SECICI (kart-izgara): eski minik select yerine, basinca smooth
+           acilan bir konteynir + logo/ad kartlari. Liste /api/servers'tan
+           (lisans sunucusu servers.php) gelir; ulasilamazsa app.js'teki gomulu
+           varsayilan listeye duser. Durum etiketleri (Aktif/Bakim/Pasif) karta
+           yansir; Bakim/Pasif sunucular secilemez. -->
+      <div class="server-picker" id="server-picker">
+        <button type="button" class="sp-trigger" id="sp-trigger" aria-expanded="false">
+          <span class="sp-trigger-logo" id="sp-trigger-logo" aria-hidden="true"></span>
+          <span class="sp-trigger-text">
+            <span class="sp-trigger-label" data-i18n="info.serverSelect">Sunucu Seçimi</span>
+            <span class="sp-trigger-name" id="sp-trigger-name">—</span>
+          </span>
+          <svg class="sp-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="sp-panel" id="sp-panel">
+          <div class="sp-panel-inner">
+            <div class="server-grid" id="server-grid"></div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <section id="tab-profil" class="tab-panel hidden">
+      <h2 class="tab-title" data-i18n="profile.title">Profil</h2>
+
+      <!-- PROFIL BASLIGI: dagilmis bilgiler yerine, once "kim/ne durumdayim"
+           sorusunu tek bakista cevaplayan bir kimlik seridi. Alttaki detay
+           kartlari aynen duruyor (tum id'ler korundu). -->
+      <div class="profile-hero">
+        <div class="profile-avatar">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+        </div>
+        <div class="profile-hero-body">
+          <div class="profile-hero-title" data-i18n="profile.hero.title">Elbit Üyeliği</div>
+          <div class="profile-hero-sub" id="profile-hero-sub" data-i18n="profile.hero.sub">Lisanslı oturum</div>
+        </div>
+        <div class="profile-hero-pill" id="profile-hero-pill">
+          <span class="profile-hero-pill-dot"></span>
+          <span id="profile-hero-pill-text" data-i18n="profile.hero.pill.active">Aktif</span>
+        </div>
+      </div>
+
+      <div class="profile-grid">
+        <div class="profile-item">
+          <div class="profile-item-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/></svg>
+          </div>
+          <div class="profile-item-body">
+            <div class="profile-item-label" data-i18n="profile.licenseKey">Lisans Anahtarı</div>
+            <div class="profile-item-value" id="profile-key-value">••••••••</div>
+          </div>
+          <button class="icon-btn-sm" id="profile-key-toggle" aria-label="Anahtarı göster/gizle" data-i18n-aria="aria.showHideKey" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+          <button class="icon-btn-sm" id="profile-key-copy" aria-label="Anahtarı kopyala" data-i18n-aria="aria.copyKey" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+        <div class="profile-item">
+          <div class="profile-item-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+          </div>
+          <div class="profile-item-body">
+            <div class="profile-item-label" data-i18n="profile.timeLeft">Kalan Süre</div>
+            <div class="profile-item-value" id="profile-expiry-value">—</div>
+          </div>
+        </div>
+        <div class="profile-item">
+          <div class="profile-item-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="profile-item-body">
+            <div class="profile-item-label" data-i18n="profile.clientMode">Client Modu</div>
+            <div class="profile-item-value" id="profile-client-mode">—</div>
+          </div>
+        </div>
+        <div class="profile-item">
+          <div class="profile-item-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </div>
+          <div class="profile-item-body">
+            <div class="profile-item-label" data-i18n="profile.totalCut">Toplam Kesilen</div>
+            <div class="profile-item-value" id="profile-total-completed">0</div>
+          </div>
+        </div>
+        <div class="profile-item profile-item-wide">
+          <div class="profile-item-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h8M8 14h5"/></svg>
+          </div>
+          <div class="profile-item-body">
+            <div class="profile-item-label" data-i18n="profile.hwid">Cihaz Kimliği (HWID)</div>
+            <div class="profile-item-value" id="profile-hwid-value">—</div>
+          </div>
+          <button class="icon-btn-sm" id="profile-hwid-copy" aria-label="Cihaz kimliğini kopyala" data-i18n-aria="aria.copyHwid" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="profile-history">
+        <div class="profile-history-head" data-i18n="history.title">Geçmiş</div>
+        <div id="history-list" class="history-list"></div>
+        <p id="history-empty" class="muted hidden" data-i18n="history.empty">Henüz kaydedilmiş bir oturum yok.</p>
+      </div>
+
+    </section>
+    <section id="tab-fonksiyonlar" class="tab-panel hidden">
+      <h2 class="tab-title" data-i18n="functions.title">Fonksiyonlar</h2>
+
+      <div class="settings-card fade-up">
+        <div class="settings-card-title" data-i18n="card.autoLoot.title">Oto Nesne</div>
+        <div class="sched-row">
+          <div class="sched-row-main">
+            <div class="sched-row-title" data-i18n="card.autoLoot.title">Oto Nesne</div>
+            <div class="sched-row-note" id="auto-loot-note">Kapalı (normal eşya toplama)</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="auto-loot-enable" />
+            <span class="switch-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-card fade-up">
+        <div class="settings-card-title" data-i18n="card.antiStuck.title">Anti-Takılma</div>
+        <div class="sched-row">
+          <div class="sched-row-main">
+            <div class="sched-row-title" data-i18n="card.antiStuck.title">Anti-Takılma</div>
+            <div class="sched-row-note" id="anti-stuck-note">Kapalı (klasik 60sn'de hedefi bırakma)</div>
+          </div>
+          <div class="sched-row-time">
+            <input type="number" class="scheduler-num" id="anti-stuck-minutes" min="0.5" max="30" step="0.5" value="2.5"
+                   aria-label="Dakika" />
+            <span class="scheduler-unit" data-i18n="unit.min">dk</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="anti-stuck-enable" />
+            <span class="switch-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- NESNE MARKET KARTI KALDIRILDI (kullanici talebi): artik AYRI bir
+           fonksiyon degil - ANTI-TAKILMA acikken OTOMATIK devrede (bkz.
+           desktop_app_main.cpp: nesneMarketDismissEnabled || antiStuckEnabled).
+           Sebep: anti-takilma hedefi birakmak icin ESC basar; ekranda "Nesne
+           Market" bildirimi varken ESC once O pencereye gidip oyunun AYARLAR
+           menusunu aciyordu. Bildirimi kapatma artik anti-takilmanin dogal bir
+           parcasi oldugu icin ayrica acilmasina gerek kalmadi. -->
+
+
+      <div class="settings-card fade-up">
+        <div class="settings-card-title" data-i18n="card.queue.title">Sıraya Ekleme</div>
+        <div class="sched-row">
+          <div class="sched-row-main">
+            <div class="sched-row-title" data-i18n="card.queue.title">Sıraya Ekleme</div>
+            <div class="sched-row-note" id="queue-others-note">Kapalı</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="queue-others-enable" />
+            <span class="switch-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-card fade-up">
+        <div class="settings-card-title" data-i18n="card.atPro.title">A-T Pro</div>
+        <div class="sched-row">
+          <div class="sched-row-main">
+            <div class="sched-row-title" data-i18n="card.atPro.title">A-T Pro</div>
+            <div class="sched-row-note" id="at-pro-note">Kapalı</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="at-pro-enable" />
+            <span class="switch-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-card fade-up">
+        <div class="settings-card-title" data-i18n="card.humanize.title">İnsancıllaştır</div>
+        <div class="sched-row">
+          <div class="sched-row-main">
+            <div class="sched-row-title" data-i18n="card.humanize.title">İnsancıllaştır</div>
+            <div class="sched-row-note" id="humanize-note">Kapalı (anında tıklama)</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="humanize-enable" />
+            <span class="switch-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-card fade-up">
+        <div class="settings-card-title" data-i18n="card.autoKey.title">Oto Basma</div>
+        <div id="auto-key-rows"></div>
+        <div class="sched-row" style="margin-top:10px">
+          <div class="sched-row-main">
+            <div class="sched-row-title" data-i18n="card.autoKey.title">Oto Basma</div>
+            <div class="sched-row-note" id="auto-key-note">Kapalı</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="auto-key-enable" />
+            <span class="switch-track"></span>
+          </label>
+        </div>
+        <button id="auto-key-farm-btn" class="btn-ghost btn-block" style="margin-top:10px" title="Hedef arama/tıklama yapmadan, sadece pencereye geçip yukarıdaki Oto Basma tuşlarını çalıştırır" data-i18n="btn.autoKeyFarm" data-i18n-title="autoKeyFarm.title">Oto Basma Farmı</button>
+      </div>
+      <!-- ZAMANLAYICI: kullanici talebiyle kendi sekmesinden BURAYA tasindi -
+           tum id'ler AYNEN korundu, dolayisiyla app.js tarafindaki kayit/
+           yukleme mantigi degismeden calisir. -->
+      <div class="settings-card fade-up">
+        <div class="settings-card-title" data-i18n="card.scheduler.title">Zamanlayıcı</div>
+
+        <div class="sched-row">
+          <div class="sched-row-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5v14l11-7Z"/></svg>
+          </div>
+          <div class="sched-row-main">
+            <div class="sched-row-title" data-i18n="sched.start">Zamanlı Başlat</div>
+            <div class="sched-row-note" id="sched-start-note" data-i18n="note.off">Kapalı</div>
+          </div>
+          <div class="sched-row-time">
+            <input type="number" class="scheduler-num" id="sched-start-h" min="0" max="23" value="0" aria-label="Saat" />
+            <span class="scheduler-unit" data-i18n="unit.hour">sa</span>
+            <input type="number" class="scheduler-num" id="sched-start-m" min="0" max="59" value="0" aria-label="Dakika" />
+            <span class="scheduler-unit" data-i18n="unit.min">dk</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="sched-start-enable" />
+            <span class="switch-track"></span>
+          </label>
+        </div>
+
+        <div class="sched-row" style="margin-top:8px">
+          <div class="sched-row-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+          </div>
+          <div class="sched-row-main">
+            <div class="sched-row-title" data-i18n="sched.stop">Zamanlı Durdur</div>
+            <div class="sched-row-note" id="sched-stop-note" data-i18n="note.off">Kapalı</div>
+          </div>
+          <div class="sched-row-time">
+            <input type="number" class="scheduler-num" id="sched-stop-h" min="0" max="23" value="0" aria-label="Saat" />
+            <span class="scheduler-unit" data-i18n="unit.hour">sa</span>
+            <input type="number" class="scheduler-num" id="sched-stop-m" min="0" max="59" value="0" aria-label="Dakika" />
+            <span class="scheduler-unit" data-i18n="unit.min">dk</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="sched-stop-enable" />
+            <span class="switch-track"></span>
+          </label>
+        </div>
+
+        <label class="checkbox-row sched-exit-row" style="margin-top:12px;margin-bottom:0">
+          <input type="checkbox" id="sched-exit-after" />
+          <span data-i18n="sched.exitAfter">Zamanlı Durdur devreye girince oyundan da çık</span>
+        </label>
+      </div>
+
+      <!-- GUARD MODU: kullanici talebiyle Ayarlar'dan buraya (Fonksiyonlar'in
+           EN ALTINA) tasindi - id'ler AYNEN korundu, app.js tarafi degismeden
+           calisir. -->
+      <div class="settings-card fade-up">
+        <div class="settings-card-title" data-i18n="card.guard.title">Guard Modu</div>
+        <div class="sched-row">
+          <div class="sched-row-main">
+            <div class="sched-row-title" data-i18n="card.guard.title">Guard Modu</div>
+            <div class="sched-row-note" id="party-mode-note">Kapalı</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="party-mode-enable" />
+            <span class="switch-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- TIKLAMA DEGISTIRME (kullanici talebi): iki switch AYNI ayarin iki
+           secenegidir (radyo gibi) - biri acilinca digeri KAPANIR, ikisi birden
+           kapali olamaz (tiklama bir sekilde yapilmali). Varsayilan: Shift + Sag
+           Tik. Secim /api/start govdesinde click_use_shift olarak gider
+           (bkz. desktop_app_main.cpp -> config.click_use_shift -> input.cpp). -->
+      <div class="settings-card fade-up">
+        <div class="settings-card-title" data-i18n="card.clickMode.title">Tıklama Değiştirme</div>
+        <div class="sched-row">
+          <div class="sched-row-main">
+            <div class="sched-row-title" data-i18n="clickMode.shift">Shift + Sağ Tık</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="click-mode-shift" checked />
+            <span class="switch-track"></span>
+          </label>
+        </div>
+        <div class="sched-row">
+          <div class="sched-row-main">
+            <div class="sched-row-title" data-i18n="clickMode.plain">Sadece Sol Tık</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="click-mode-plain" />
+            <span class="switch-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- TIKLAMA YONTEMI (kullanici talebi): iki switch AYNI ayarin iki
+           secenegidir (radyo gibi) - Tiklama Degistirme karti ile AYNI desen.
+           Varsayilan: mevcut (kanitlanmis) yontem. Secim /api/start
+           govdesinde input_use_postmessage olarak gider (bkz.
+           desktop_app_main.cpp -> config.input_use_postmessage -> input.cpp). -->
+      <div class="settings-card fade-up">
+        <div class="settings-card-title" data-i18n="card.inputMethod.title">Tıklama Yöntemi</div>
+        <div class="sched-row">
+          <div class="sched-row-main">
+            <div class="sched-row-title" data-i18n="inputMethod.default">Varsayılan</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="input-method-default" checked />
+            <span class="switch-track"></span>
+          </label>
+        </div>
+        <div class="sched-row">
+          <div class="sched-row-main">
+            <div class="sched-row-title" data-i18n="inputMethod.postmessage">PostMessage</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="input-method-postmessage" />
+            <span class="switch-track"></span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-ayarlar" class="tab-panel hidden">
+      <h2 class="tab-title" data-i18n="settings.title">Ayarlar</h2>
+
+      <!-- KALIBRASYON: cihazdan cihaza degisen esikleri OLCEREK ayarlar.
+           Oyun ekranini ~40 sn izler, HICBIR TIKLAMA YAPMAZ (sadece kamerayi
+           cevirir), sonra esikleri config.json'a yazar. Aciklama metni
+           kullanici talebiyle arayuzden KALDIRILDI (fonksiyonun kendisi
+           degismedi). -->
+      <div class="settings-card">
+        <div class="settings-card-title" data-i18n="card.calib.title">Kalibrasyon</div>
+        <button id="calib-btn" class="btn-primary btn-block" data-i18n="btn.calibrate">Kalibre Et</button>
+        <div id="calib-progress-wrap" class="hidden" style="margin-top:12px">
+          <div class="sched-row-note" id="calib-phase">Başlatılıyor...</div>
+          <div class="calib-bar"><div class="calib-bar-fill" id="calib-bar-fill"></div></div>
+        </div>
+        <div id="calib-result" class="calib-result hidden"></div>
+      </div>
+
+      <!-- TEMA (renk + arka plan) kullanici talebiyle Ayarlar'dan SIDEBAR'a
+           tasindi (bkz. <aside class="sidebar"> icindeki .sidebar-theme). -->
+
+      <div class="settings-card fade-up">
+        <div class="settings-card-title" data-i18n="card.hotkeys.title">Kısayollar</div>
+        <div class="sched-row">
+          <div class="sched-row-main">
+            <div class="sched-row-title" data-i18n="hotkey.startKey">Başlat tuşu</div>
+          </div>
+          <button class="btn-ghost hotkey-capture" id="hotkey-start-btn" data-which="start">Ata</button>
+        </div>
+        <div class="sched-row">
+          <div class="sched-row-main">
+            <div class="sched-row-title" data-i18n="hotkey.stopKey">Durdur tuşu</div>
+          </div>
+          <button class="btn-ghost hotkey-capture" id="hotkey-stop-btn" data-which="stop">Ata</button>
+        </div>
+      </div>
+
+      <div id="discord-card" class="discord-card">
+        <div class="discord-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M20.3 4.4A19.7 19.7 0 0 0 15.6 3c-.2.4-.5.9-.7 1.3a18 18 0 0 0-5.8 0A9 9 0 0 0 8.4 3a19.6 19.6 0 0 0-4.7 1.4C1 9 .3 13.5.6 18a19.8 19.8 0 0 0 6 3c.5-.6.9-1.3 1.3-2a13 13 0 0 1-2-1s.2-.1.3-.2a14.2 14.2 0 0 0 12 0l.3.2a13 13 0 0 1-2 1c.4.7.8 1.4 1.3 2a19.7 19.7 0 0 0 6-3c.4-5.2-1-9.6-3.5-13.6ZM8.7 15.3c-1.1 0-2-1-2-2.3s.9-2.3 2-2.3 2 1 2 2.3-.9 2.3-2 2.3Zm6.6 0c-1.1 0-2-1-2-2.3s.9-2.3 2-2.3 2 1 2 2.3-.9 2.3-2 2.3Z"/></svg>
+        </div>
+        <div class="discord-body">
+          <div id="discord-title" class="discord-title" data-i18n="discord.notConnected">Discord bağlı değil</div>
+          <div id="discord-sub" class="discord-sub" data-i18n="discord.sub">Uzaktan durum bildirimi ve komutlar için hesabınızı bağlayın.</div>
+        </div>
+        <button id="discord-connect-btn" class="btn-primary" data-i18n="btn.discordConnect">Discord'a Bağlan</button>
+      </div>
+
+      <div id="telegram-card" class="discord-card telegram-card" style="margin-top:12px">
+        <div class="discord-icon telegram-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M23.91 3.79 20.3 20.84c-.25 1.21-.98 1.5-2 .94l-5.5-4.07-2.66 2.57c-.3.3-.55.56-1.1.56l.39-5.59 10.16-9.18c.44-.39-.1-.61-.68-.22L6.66 13.19l-5.35-1.68c-1.16-.36-1.18-1.16.24-1.72L22.42 2.11c.97-.36 1.82.22 1.49 1.68Z"/></svg>
+        </div>
+        <div class="discord-body">
+          <div id="telegram-title" class="discord-title" data-i18n="telegram.notConnected">Telegram bağlı değil</div>
+          <div id="telegram-sub" class="discord-sub" data-i18n="telegram.sub">Uzaktan durum bildirimi ve komutlar için Telegram hesabınızı bağlayın.</div>
+        </div>
+        <button id="telegram-connect-btn" class="btn-primary" data-i18n="btn.telegramConnect">Telegram'a Bağlan</button>
+      </div>
+    </section>
+
+    <!-- TEMA: kullanici talebiyle ayri bir nav sekmesi (Ayarlar/Fonksiyonlar
+         gibi). Renk + arka plan buraya tasindi; id'ler (theme-swatches /
+         bgmode-options) KORUNDU - app.js wiring aynen calisir. -->
+    <!-- MANUEL TARAMA (kullanici talebi): metin modellerini ATLAYIP, kullanicinin
+         kirptigi gorseli arar ve ofsetli noktaya tiklar. Akis: switch -> gorsel
+         sec (kirpma araci) -> ofset -> tiklama turu -> Baslat. -->
+    <section id="tab-manuel" class="tab-panel hidden">
+      <h2 class="tab-title" data-i18n="manual.title">Manuel Tarama</h2>
+
+      <div class="settings-card fade-up">
+        <div class="sched-row">
+          <div class="sched-row-main">
+            <div class="sched-row-title" data-i18n="manual.enable">Manuel Tarama</div>
+            <div class="sched-row-note" id="manual-enable-note" data-i18n="manual.enableOff">Kapalı — metin modelleri çalışır</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="manual-enable" />
+            <span class="switch-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <div id="manual-steps">
+        <div class="settings-card fade-up">
+          <div class="settings-card-title"><span data-i18n="manual.step1">1. Hedef Görselleri</span></div>
+
+          <div class="mt-gallery" id="manual-gallery">
+            <!-- kartlar app.js tarafindan doldurulur -->
+          </div>
+
+          <div class="mt-empty" id="manual-empty">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+            <div class="mt-empty-title" data-i18n="manual.noImage">Henüz hedef eklenmedi</div>
+            <div class="mt-empty-sub" data-i18n="manual.emptyHint">Aşağıdaki butonla oyundan bir hedef kırpın.</div>
+          </div>
+
+          <button id="manual-capture-btn" class="btn-primary mt-add-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M12 8v8M8 12h8"/></svg>
+            <span data-i18n="manual.pick">Hedef Ekle</span>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <section id="tab-tema" class="tab-panel hidden">
+      <h2 class="tab-title" data-i18n="theme.title">Tema</h2>
+
+      <div class="settings-card">
+        <div class="settings-card-title" data-i18n="card.theme.title">Tema Rengi</div>
+        <div class="theme-swatches" id="theme-swatches">
+          <button class="swatch" data-color="#e8eaed" style="--sw:#e8eaed" title="Siyah / Beyaz / Gri" data-i18n-title="swatch.bw"></button>
+          <button class="swatch" data-color="#5b8def" style="--sw:#5b8def" title="Mavi" data-i18n-title="swatch.blue"></button>
+          <button class="swatch" data-color="#34d399" style="--sw:#34d399" title="Yeşil" data-i18n-title="swatch.green"></button>
+          <button class="swatch" data-color="#a78bfa" style="--sw:#a78bfa" title="Mor" data-i18n-title="swatch.purple"></button>
+          <button class="swatch" data-color="#f0709c" style="--sw:#f0709c" title="Pembe" data-i18n-title="swatch.pink"></button>
+          <button class="swatch" data-color="#fb923c" style="--sw:#fb923c" title="Turuncu" data-i18n-title="swatch.orange"></button>
+          <button class="swatch" data-color="#e5636f" style="--sw:#e5636f" title="Kırmızı" data-i18n-title="swatch.red"></button>
+          <button class="swatch swatch-rainbow" data-color="rainbow" title="Rengarenk" data-i18n-title="swatch.rainbow"></button>
+        </div>
+      </div>
+
+      <div class="settings-card fade-up">
+        <div class="settings-card-title" data-i18n="card.bg.title">Arka Plan</div>
+        <div class="bgmode-options" id="bgmode-options">
+          <button class="bgmode-btn active" data-bgmode="solid">
+            <span class="bgmode-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="4"/></svg></span>
+            <span data-i18n="bg.solid">Koyu (Tok)</span>
+          </button>
+          <button class="bgmode-btn" data-bgmode="translucent">
+            <span class="bgmode-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/></svg></span>
+            <span data-i18n="bg.translucent">Yarı Saydam</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="/i18n.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

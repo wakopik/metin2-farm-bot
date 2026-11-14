@@ -1,0 +1,19 @@
+{
+  "name": "elbit-cpp",
+  "version": "0.1.0",
+  "dependencies": [
+    "opencv4",
+    "nlohmann-json",
+    {
+      "name": "cpp-httplib",
+      "features": [
+        "openssl"
+      ]
+    },
+    "openssl",
+    "ixwebsocket",
+    "webview2",
+    "onnxruntime"
+  ],
+  "builtin-baseline": "ea1a7396b05637a53bf23c078647ecc0edee4b80"
+}

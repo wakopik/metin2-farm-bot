@@ -1,0 +1,13 @@
+# Egitilmis YOLO modelleri Git LFS ile saklanir (her biri ~12 MB).
+*.onnx filter=lfs diff=lfs merge=lfs -text
+
+# Kaynak dosyalarda satir sonlarini normalize et.
+*.cpp text eol=crlf
+*.h text eol=crlf
+*.js text
+*.css text
+*.html text
+*.json text
+*.md text
+*.png binary
+*.ico binary

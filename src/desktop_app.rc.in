@@ -1,0 +1,11 @@
+// Yonetici yetkisi istegi (manifest) - cift tiklaninca Windows otomatik UAC sorar.
+// GEREKLI: oyun client'lari (metin2client.bin) Yonetici olarak calisiyor -
+// desktop_app.exe Yonetici DEGILSE, Windows UIPI coklu-client pencere
+// gecisini (SetForegroundWindow/AttachThreadInput) SESSIZCE ENGELLER.
+1 24 "@CMAKE_CURRENT_SOURCE_DIR@/src/desktop_app.manifest"
+
+// Uygulama simgesi (kalkan + "E") - EXE dosyasinin KENDISININ (Gezgin'de
+// gorunen) VE pencere/gorev cubugu simgesinin kaynagi. Kaynak listesindeki
+// ILK simge oldugu icin Windows Gezgini otomatik olarak bunu exe simgesi
+// olarak kullanir.
+101 ICON "@CMAKE_CURRENT_SOURCE_DIR@/assets/app_icon.ico"
